@@ -59,16 +59,29 @@ def validar_password(password):
     return True, ""
 
 
+
+import tempfile
+
 def get_db_connection():
-    """Crea y devuelve una conexión a la base de datos SQLite."""
-    # Define la carpeta de trabajo temporal de Streamlit (segura para escritura)
-    db_folder = "db_data"
-    if not os.path.exists(db_folder):
-        os.makedirs(db_folder)
+    """Crea y devuelve una conexión a la base de datos SQLite con lógica híbrida (Local/Nube)."""
+    db_filename = 'runcheck.db'
     
-    # La conexión ahora debe apuntar a esta carpeta:
-    db_path = os.path.join(db_folder, "runcheck.db")
-    conn = sqlite3.connect(db_path)
+    # 1. Intentamos usar la base de datos LOCAL (La que tiene mis usuarios)
+    # Verificamos si podemos escribir en el directorio actual
+    try:
+        with open(".perm_test", "w") as f:
+            f.write("ok")
+        os.remove(".perm_test")
+        # Si llegamos aquí, tenemos permisos (Estamos en Local/PC)
+        db_path = db_filename
+        # print(f"✅ MODO LOCAL DETECTADO: Usando {db_path}") # Debug opcional
+    except:
+        # Si falla, estamos en la Nube restringida -> Usamos Temp
+        temp_dir = tempfile.gettempdir()
+        db_path = os.path.join(temp_dir, db_filename)
+        # print(f"☁️ MODO NUBE DETECTADO: Usando {db_path}") # Debug opcional
+
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
