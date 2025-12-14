@@ -61,7 +61,9 @@ def validar_password(password):
 
 def get_db_connection():
     """Crea y devuelve una conexión a la base de datos SQLite."""
-    conn = sqlite3.connect('runcheck.db')
+    # Usar path absoluto para evitar errores en Cloud
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'runcheck.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
